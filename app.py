@@ -1,17 +1,36 @@
-# Gọi chức năng từ 2 file kiemtra.py và main.py sang
-from kiemtra import xu_ly_va_doc_du_lieu
-from main import in_bao_cao_ket_qua
+import streamlit as st
+import pandas as pd
 
-print("=" * 60)
-print("BẮT ĐẦU BÀI THỰC HÀNH PHÂN TÍCH DỮ LIỆU KHÁCH HÀNG THẺ TÍN DỤNG")
-print("=" * 60)
+st.set_page_config(page_title="Phân tích Thẻ tín dụng", layout="centered")
+st.title("📊 Ứng dụng Phân tích Khách hàng Thẻ Tín dụng")
+st.markdown("---")
 
-# 1. Gọi file kiemtra.py để tìm file zip, giải nén và nạp dữ liệu
-df = xu_ly_va_doc_du_lieu()
+# Đọc trực tiếp file dữ liệu bạn vừa tải lên
+try:
+    # Bỏ qua 1 dòng đầu để lấy đúng tên cột chuẩn
+    df = pd.read_csv("default of credit card clients.xls - Data.csv", skiprows=1)
+    
+    st.success("🎉 Nạp dữ liệu thành công từ file CSV!")
+    st.subheader("📌 Kết quả Thống kê Tổng quan")
+    
+    total_rows = df.shape[0]
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric(label="Tổng số hồ sơ phân tích", value=f"{total_rows:,} người")
+    with col2:
+        st.metric(label="Số lượng thuộc tính", value=f"{df.shape[1]} cột")
+        
+    st.subheader("💳 Trạng thái Nợ xấu (Thực tế từ dữ liệu)")
+    # Cột cuối cùng Y hoặc default payment next month
+    target_col = df.columns[-1]
+    bad_credit = int((df[target_col] == 1).sum())
+    good_credit = total_rows - bad_credit
+    
+    st.write(f"✔️ **Đúng hạn:** {good_credit:,} người ({round(good_credit/total_rows*100, 2)}%)")
+    st.write(f"⚠️ **Nợ xấu:** {bad_credit:,} người ({round(bad_credit/total_rows*100, 2)}%)")
+    
+    st.subheader("👀 Xem trước bảng dữ liệu thô")
+    st.dataframe(df.head(10))
 
-# 2. Gọi file main.py để in báo cáo kết quả
-in_bao_cao_ket_qua(df)
-
-print("\n" + "=" * 60)
-print("KẾT LUẬN: ĐÃ HOÀN THÀNH BÀI PHÂN TÍCH THÀNH CÔNG ĐẠT ĐIỂM TỐI ĐA!")
-print("=" * 60)
+except Exception as e:
+    st.error("❌ Hệ thống đang đợi bạn up file dữ liệu lên GitHub cùng thư mục!")
